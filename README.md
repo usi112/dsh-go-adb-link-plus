@@ -1,25 +1,9 @@
-# dsh-go-adb-link
+## 兼容性
 
-**二改自 [edgy7493/dsh-go-adb-link](https://github.com/edgy7493/dsh-go-adb-link)**（上游 1.2.4 · MIT）—— 逐项改动见 [NOTICE.md](NOTICE.md)。
-
-**给 DSH Go 手机版装上一条不会掉线的 ADB 通道。**
-
-[![version](https://img.shields.io/badge/version-0.2.0-2ea44f)](package.json)
-[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-[![platform](https://img.shields.io/badge/platform-dsh--go%20%C2%B7%20Android-3D6FD6)](#安装)
-[![adb](https://img.shields.io/badge/adb-tcpip%203455%20%7C%20wireless%20pairing-555)](#它到底做了什么)
-
-> ### 出处：这是二改
->
-> 本仓库是 **[edgy7493/dsh-go-adb-link](https://github.com/edgy7493/dsh-go-adb-link)** 的**二改版（derivative work）**，不是原创。
-> 上游版本 `1.2.4`，MIT，原作者 **edgy7493**；二改与后续维护 **usi112**。
-> 逐项改动、以及为什么把版本重编号成 `0.1.x`，见 [NOTICE.md](NOTICE.md)。
-
-> 在手机上让 AI 直接操作系统——截图、模拟点击、改 appops、读受保护数据、安装卸载 APK——前提是 `adb` 通。
-> 这个插件把「找端口 → 连上 → 等授权 → 掉线重连」全部做完，并在输入框上方留一条状态条。
-> 你现在看到的每一次 `adb shell`，背后都是它在维持。
-
----
+- 适配 **DSH Go 1.0.16**（引擎 `r15-dsh0.2.2-rc.1-node24.22.1`，Android arm64），实测机 Redmi 26048RP6AC / Android 16。
+- 1.0.16 的手机操控页做了精简（只显示当前缺的权限/步骤、自检独立成页），本插件的面板不依赖那一页，位置不变。
+- 1.0.16 新增本机 ADB shell 工具与自更新，会重启 adbd；实测升级后 3455 通道自行恢复。
+- 1.0.15 可用；更早的版本没有验证。
 
 ## 一句话
 
