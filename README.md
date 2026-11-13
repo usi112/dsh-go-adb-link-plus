@@ -2,7 +2,7 @@
 
 **给 DSH Go 手机版装上一条不会掉线的 ADB 通道。**
 
-[![version](https://img.shields.io/badge/version-0.1.2-2ea44f)](package.json)
+[![version](https://img.shields.io/badge/version-0.1.3-2ea44f)](package.json)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![platform](https://img.shields.io/badge/platform-dsh--go%20%C2%B7%20Android-3D6FD6)](#安装)
 [![adb](https://img.shields.io/badge/adb-tcpip%203455%20%7C%20wireless%20pairing-555)](#它到底做了什么)
@@ -33,7 +33,7 @@ DSH Go 的 Ubuntu 是免 root 的 proot，没有 USB，也不能 `setprop persis
 | **自动重连** | 引擎启动、面板打开、轮询发现掉线时自动连；90 秒防抖，端口漂移时后台全端口重扫（限频 10 分钟） |
 | **固定 3455** | 一键 `adb tcpip 3455`，让 adbd 改成明文 TCP 固定端口。之后掉线只剩一次 `adb connect 127.0.0.1:3455`，不用再扫 65535 个端口 |
 | **无线调试配对** | 面板里填「地址 / 配对端口 / 6 位配对码」→ `adb pair` 成功后自动在高位端口段找连接端口，逐个 `adb connect` 验证（TLS 端口只能这样认） |
-| **认得出 TLS 端口** | 开放端口扫完再做一次真 TLS 握手判定：无线调试的配对端口与连接端口都是 TLS，明文握手永远看不见它们；配对端口可以留空，插件自己扫出来逐个试配对 |
+| **无线调试端口发现** | 有任意通道时直接读手机 `/proc/net/tcp*` 里 uid=2000（shell）的 LISTEN 端口——adbd 端口一览即得（**~180 ms**，配对面板开着时配对端口也在里面）；完全没通道才扫开放端口（~20 s），逐个 `adb connect` 验证 |
 | **原生界面** | 输入框上方状态条（`ADB · 3455`）+ 面板：状态、方式、端口、端点、设备、已配对、客户端、自动重连、最近错误、检查时间 |
 | **交给 AI** | 注册一个 `adb` 工具（参数结构化、自动确保连接、原生结果卡），并在系统提示里明确「系统级操作优先用 adb，不必先问」 |
 | **不污染环境** | 运行记忆写在 `$DSH_HOME/dsh-go/adb-link/state.json`，不在包内，卸载/升级都不会带走或误发 |
@@ -85,21 +85,25 @@ dsh plugin --profile web add ./local-adb-quiet-0.1.1.tgz
 - **扫描端口**：先跑明文握手；没有结果就自动转 TLS 路径——开放端口扫描 → TLS 握手判定 → 逐个 `adb connect` 验证。
 - **配对并连接**：给 Android 11+ 无线调试用。配对码一次性、面板每次打开都会换；配对记录存在 `~/.android/adb_known_hosts.pb`，**配对一次长期有效**。配对端口不知道填什么就**留空**。
 
-## 速度（实测，本机 proot / Redmi 26048RP6AC）
+## 速度（实测，本机 proot / Redmi 26048RP6AC / Android 16）
 
 | 场景 | 耗时 | 说明 |
 | --- | --- | --- |
-| 端口没变（缓存命中） | **7–11 ms** | `state.tlsPort` 存了上次的 TLS 端口，直接握手确认 |
-| 已有通道时问设备 | **~62 ms** | `adb shell getprop service.adb.tls.port`（无线调试开着时 adbd 会写这个属性） |
+| 已有通道，问设备要 adbd 端口 | **180 ms** | 读 `/proc/net/tcp*` 的 uid=2000 LISTEN 端口，得知 3455 与无线调试端口 |
+| 端口没变（`state.tlsPort` 缓存） | **7–11 ms** | 上次的无线端口直接握手确认 |
 | 明文候选（3455 / 5555 / 记忆端口） | **5 ms** | 发一个 `CNXN` 包 |
-| 冷扫无线调试端口（32768–60999） | **19.4 s** | 28k 端口、并发 300、4096 一块、凑够 3 个 TLS 候选就停 |
+| 冷扫（无任何通道，32768–60999） | **19.5 s** | 开放端口扫描 28k 端口，finds 33027、46235，再由 `adb connect` 判定 |
 | 经典 TCP 全端口扫描（65535） | 20–25 s | 只在完全没有线索时用 |
 
-调参是量出来的，不是拍的：
+### 一个被实测推翻的假设（0.1.1–0.1.2 的错）
 
-- 并发冲高会**漏检**：c800 测三次里有两次只找到 2/3 的服务；c300 两次都 3/3。proot 用户态网络在高并发下会丢 SYN。
-- **TLS 握手不能塞进高并发扫描里**：同一时刻六百个连接在跑时，那个 TLS 端口会握手超时。所以改成「块内只做 TCP 探测、块与块之间安静地做 TLS 握手」，凑够候选就停。
-- TLS 判定失手也不至于连不上：扫不到 TLS 端口时，会把开放端口原样交给 `adb connect` 试（限 8 个）。
+0.1.1/0.1.2 曾用「TLS 握手成功」来筛无线调试端口。**这个做法对 adbd 无效**：
+
+- 安卓 11+ 无线调试用的是 **TLS-PSK**，密钥来自 SPAKE2 配对交换，普通 TLS 客户端拿不到 PSK；
+- 实测：`adb connect 127.0.0.1:46235` 直接 `device`，而 `tls.connect` 同一个端口 100% 静默超时或 `ECONNRESET`；
+- 结论：TLS 探测不能当过滤器，**唯一可信的判据是 `adb connect` + `adb devices`**；快速路径只能走设备侧套接字表。
+
+0.1.3 已删掉 TLS 探测代码（`lib/adb.js` 留了一段说明原因的注释，避免后来人再踩）。
 
 ## 为什么是 3455，不是 5555
 
@@ -116,10 +120,12 @@ dsh plugin --profile web add ./local-adb-quiet-0.1.1.tgz
 **② 固定端口。** `adb tcpip 3455` 让 adbd 重启成 TCP 模式，端口号从此固定。
 Android 官方把它当调试后门，但在自己手机上这是唯一能让「掉线=一次 connect」成立的办法。
 
-**③ TLS 无线调试。** 这条路握手包一律石沉大海。先做开放端口扫描，再用 **真 TLS 握手**把 TLS 服务挑出来
-（HTTP 服务与明文 adbd 会被判否），然后把每个候选交给 `adb connect`——**只有 `adb devices` 里的 `device` 算数**。
-proot 用户态网络里的 `connect()` 会假成功（几百毫秒后同一端口就 refused），所以每个候选都二次确认。
-配对端口同理：用你给的 6 位码对 TLS 候选逐个试 `adb pair`，配对码只对真正的配对端口有效，试错不会配错设备。
+**③ 无线调试。** 这条路对普通 ADB 明文握手完全不可见，而且**无线调试端口用的是 TLS-PSK**
+（密钥由 SPAKE2 配对交换得出），所以连「发一个 TLS 握手看看」都不成立——实测 `adb connect` 能连上、
+`tls.connect` 同一端口必定超时或 `ECONNRESET`。能用的只有两条：
+
+- **有通道时问手机**：读 `/proc/net/tcp*` 里 uid=2000（shell）的 LISTEN 端口，adbd 的端口一览即得，约 180 ms；配对面板开着时配对端口也会出现。
+- **完全没通道时扫描**：扫开放端口，把每个候选交给 `adb connect`，只有 `adb devices` 里的 `device` 算数（proot 里 `connect()` 会假成功，所以候选还要二次确认）。
 
 连上之后，插件的 adb server（`127.0.0.1:5037`）与 bash 共用：插件相当于替 bash 执行了一次 `adb connect`。
 
@@ -146,7 +152,7 @@ proot 用户态网络里的 `connect()` 会假成功（几百毫秒后同一端�
 | 现象 | 大概率原因 | 动作 |
 | --- | --- | --- |
 | 状态条「ADB 未连接」 | 端口变了 / TCP 服务没开 | 点「扫描端口」，或确认 Stellar 的 TCP 已开 |
-| 全端口扫不到，但手机确实在调试 | Android 11+ 无线调试是 TLS | 点「扫描端口」（会自动转 TLS 路径），或填配对表单（配对端口可留空） |
+| 全端口扫不到，但手机确实在调试 | 无线调试端口是 TLS-PSK，握手探测看不见 | 点「扫描端口」（有通道会读手机监听表，约 0.2 秒），或填配对表单（配对端口可留空） |
 | 之前 `device`，突然 `Connection refused` | 端口轮换（实测 43955 → 35753 → 39763） | 重连即可；固定过 3455 的机器不会遇到 |
 | 一直「待授权」 | 弹窗没点或没勾「始终允许」 | 点「连接」→ 手机上允许，10 分钟内不要反复触发 |
 | 「缺 adb 客户端」 | 运行时升级清了 `/usr` | 点「连接」自动 `apt-get install -y adb` |
