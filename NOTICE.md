@@ -1,5 +1,9 @@
 # 来源与二改说明 · Attribution
 
+**原始版权**：`Copyright (c) 2026 dsh-go-adb-link contributors`（上游 edgy7493/dsh-go-adb-link，MIT）。
+本仓库的 `LICENSE` 只保留标准 MIT 正文（版权行为 usi112），因为 GitHub 的许可证识别要靠模板匹配，
+掺进额外段落会被判成 `NOASSERTION`；来源与改动全部记在本文件里，信息没有丢。
+
 这个仓库是二手改（derivative work），不是原创。
 
 | | |
