@@ -4,7 +4,7 @@
 
 **给 DSH Go 手机版装上一条不会掉线的 ADB 通道。**
 
-[![version](https://img.shields.io/badge/version-0.1.4-2ea44f)](package.json)
+[![version](https://img.shields.io/badge/version-0.2.0-2ea44f)](package.json)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![platform](https://img.shields.io/badge/platform-dsh--go%20%C2%B7%20Android-3D6FD6)](#安装)
 [![adb](https://img.shields.io/badge/adb-tcpip%203455%20%7C%20wireless%20pairing-555)](#它到底做了什么)
@@ -55,21 +55,26 @@ DSH Go 的 Ubuntu 是免 root 的 proot，没有 USB，也不能 `setprop persis
 两处缺一，引擎的组合配置里就看不到插件，重启多少次都没用：
 
 ```sh
-dsh --profile web --dump-config | grep -A1 local-adb-quiet
-# 有 `- id: local-adb-quiet` 才算挂上；没输出就是没挂上
+dsh --profile web --dump-config | grep -A1 dsh-go-adb-link-plus
+# 有 `- id: dsh-go-adb-link-plus` 才算挂上；没输出就是没挂上
 ```
 
 没挂上就补齐（路径换成你的）：
 
 ```sh
-dsh plugin --profile web add "$DSH_HOME/dsh-go/plugins/local-adb-quiet"
-# 仍不写 bundles 时，手动加进 profiles/web/package.json 的 dsh.profile.bundles
+dsh plugin --profile web add "$DSH_HOME/dsh-go/plugins/dsh-go-adb-link-plus"
+# 仍不写 bundles 时，手动把 dsh-go-adb-link-plus 加进 profiles/web/package.json 的 dsh.profile.bundles
 # 然后 设置 › 引擎 › 重启引擎
 ```
 
 另一处常见原因：`lib/` 代码改了**必须重启引擎**（清单 `package.json` 会自动重读，代码不会）。
 
 ## 安装
+
+> **包名变更（0.2.0）**：从 `local-adb-quiet` 改名成 `dsh-go-adb-link-plus`，方便按名字搜到。
+> 老用户重装一次即可：`dsh plugin --profile web remove local-adb-quiet` 然后按下面重新 `add`。
+> 插件内部 id / `cordis.patch.yml` / `lib/index.js` 的 `name` 已同步，运行记忆（`$DSH_HOME/dsh-go/adb-link/`）不受影响。
+
 
 前置：DSH Go App ≥ 1.0.11 · dsh 运行时 `>=0.2.1-rc.2 <0.3.0` · Node ≥ 22 · 手机侧已开 TCP 调试
 （Stellar / Shizuku 的 TCP，或做过 `adb tcpip`）。
@@ -78,11 +83,11 @@ dsh plugin --profile web add "$DSH_HOME/dsh-go/plugins/local-adb-quiet"
 # 本地目录（开发用，改了代码热生效）
 mkdir -p "$DSH_HOME/dsh-go/plugins"
 git clone https://github.com/usi112/dsh-go-adb-link \
-  "$DSH_HOME/dsh-go/plugins/local-adb-quiet"
-dsh plugin --profile web add "$DSH_HOME/dsh-go/plugins/local-adb-quiet"
+  "$DSH_HOME/dsh-go/plugins/dsh-go-adb-link-plus"
+dsh plugin --profile web add "$DSH_HOME/dsh-go/plugins/dsh-go-adb-link-plus"
 
 # 或者 tgz
-dsh plugin --profile web add ./local-adb-quiet-0.1.1.tgz
+dsh plugin --profile web add ./dsh-go-adb-link-plus-0.2.0.tgz
 ```
 
 装完 `设置 › 引擎 › 重启引擎` 一次（清单会自动重读，`lib/` 代码不会）。状态条出现在输入框上方。
