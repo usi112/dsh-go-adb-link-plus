@@ -29,12 +29,13 @@ DSH Go 的 Ubuntu 是免 root 的 proot，没有 USB，也不能 `setprop persis
 
 ## 长什么样
 
-| 状态条 | 面板 | 无线调试配对 |
-| --- | --- | --- |
-| ![状态条](docs/img/status-bar.png) | ![面板](docs/img/panel.png) | ![配对](docs/img/pair.png) |
+| 面板（连接已固定到 3455） | 无线调试配对 |
+| --- | --- |
+| ![面板](docs/img/panel.png) | ![配对](docs/img/pair.png) |
 
-> 以上是按插件真实视图 JSON 渲染的示意图（不是实机照片），布局、字段、按钮与 App 里一致；
+> 实机截图（Redmi `24117RK2CC` / Android 16 深色主题），已裁掉系统状态栏；
 > 机器可读清单在 [`screenshots.json`](screenshots.json)。
+> 状态条在输入框上方，显示 `ADB · 3455`，点它进这个面板。
 
 ## 它到底做了什么
 
@@ -260,7 +261,7 @@ lib/state.js    运行记忆（$DSH_HOME/dsh-go/adb-link/state.json）
 cordis.patch.yml  注册进 profile 的 patch 层
 NOTICE.md        二改来源与逐项改动说明
 docs/使用流程.md  完整流程说明
-docs/img/*.png   状态条 / 面板 / 配对三张示意图
+docs/img/*.png   面板与配对两张实机截图
 screenshots.json 市场卡片用的图片清单
 ```
 
