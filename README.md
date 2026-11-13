@@ -72,7 +72,8 @@ dsh plugin --profile web add "$DSH_HOME/dsh-go/plugins/dsh-go-adb-link-plus"
 
 ## 安装
 
-> **包名变更（0.2.0）**：从 `local-adb-quiet` 改名成 `dsh-go-adb-link-plus`，方便按名字搜到。
+> **改名说明（0.2.0）**：仓库从 `dsh-go-adb-link` 改为 `dsh-go-adb-link-plus`（避免与上游同名），
+> npm 包名从 `local-adb-quiet` 改为 `dsh-go-adb-link-plus`，方便按名字搜到。旧链接 GitHub 会自动跳转。
 > 老用户重装一次即可：`dsh plugin --profile web remove local-adb-quiet` 然后按下面重新 `add`。
 > 插件内部 id / `cordis.patch.yml` / `lib/index.js` 的 `name` 已同步，运行记忆（`$DSH_HOME/dsh-go/adb-link/`）不受影响。
 
@@ -83,7 +84,7 @@ dsh plugin --profile web add "$DSH_HOME/dsh-go/plugins/dsh-go-adb-link-plus"
 ```sh
 # 本地目录（开发用，改了代码热生效）
 mkdir -p "$DSH_HOME/dsh-go/plugins"
-git clone https://github.com/usi112/dsh-go-adb-link \
+git clone https://github.com/usi112/dsh-go-adb-link-plus-plus \
   "$DSH_HOME/dsh-go/plugins/dsh-go-adb-link-plus"
 dsh plugin --profile web add "$DSH_HOME/dsh-go/plugins/dsh-go-adb-link-plus"
 
