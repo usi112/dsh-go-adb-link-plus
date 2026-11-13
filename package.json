@@ -1,0 +1,77 @@
+{
+  "name": "local-adb-quiet",
+  "version": "0.1.0",
+  "description": "为 DSH Go 手机版打造的 ADB 自动连接插件：自动发现手机 adbd 的 TCP 端口、adb tcpip 固定端口、Android 11+ 无线调试配对，并把通道交给 AI 直接使用 · Native dsh-go plugin that keeps ADB linked on the phone",
+  "type": "module",
+  "main": "lib/index.js",
+  "license": "MIT",
+  "author": "usi112",
+  "homepage": "https://github.com/usi112/dsh-go-adb-link#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/usi112/dsh-go-adb-link.git"
+  },
+  "bugs": {
+    "url": "https://github.com/usi112/dsh-go-adb-link/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "dsh-go",
+    "deepseek-harness",
+    "adb",
+    "android",
+    "shizuku",
+    "stellar",
+    "wireless-debugging",
+    "tcpip"
+  ],
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "engines": {
+    "dsh": ">=0.2.1-rc.2 <0.3.0-0",
+    "node": ">=22"
+  },
+  "dshGo": {
+    "v": 1,
+    "minApp": "1.0.11",
+    "title": {
+      "zh": "ADB 自动连接",
+      "en": "ADB auto-link"
+    },
+    "icon": "terminal",
+    "contributes": {
+      "composer.strip": [
+        {
+          "id": "adb-state",
+          "icon": "terminal",
+          "panel": "adb"
+        }
+      ],
+      "panels": [
+        {
+          "id": "adb",
+          "title": {
+            "zh": "ADB 连接",
+            "en": "ADB link"
+          },
+          "icon": "terminal",
+          "placement": [
+            "session.tab",
+            "features",
+            "chat.panel"
+          ]
+        }
+      ]
+    }
+  }
+}
