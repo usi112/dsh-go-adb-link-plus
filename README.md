@@ -33,7 +33,7 @@ DSH Go 的 Ubuntu 是免 root 的 proot，没有 USB，也不能 `setprop persis
 | --- | --- |
 | ![面板](docs/img/panel.png) | ![配对](docs/img/pair.png) |
 
-> 实机截图（Redmi `24117RK2CC` / Android 16 深色主题），已裁掉系统状态栏；
+> 实机截图（Redmi `24117RK2CC` / Android 16 深色主题），统一 **3:4 / 900×1200** 裁切，已裁掉系统状态栏与手势条；
 > 机器可读清单在 [`screenshots.json`](screenshots.json)。
 > 状态条在输入框上方，显示 `ADB · 3455`，点它进这个面板。
 
