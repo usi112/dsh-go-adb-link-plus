@@ -2,7 +2,7 @@
 
 **给 DSH Go 手机版装上一条不会掉线的 ADB 通道。**
 
-[![version](https://img.shields.io/badge/version-0.1.1-2ea44f)](package.json)
+[![version](https://img.shields.io/badge/version-0.1.2-2ea44f)](package.json)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![platform](https://img.shields.io/badge/platform-dsh--go%20%C2%B7%20Android-3D6FD6)](#安装)
 [![adb](https://img.shields.io/badge/adb-tcpip%203455%20%7C%20wireless%20pairing-555)](#它到底做了什么)
@@ -84,6 +84,22 @@ dsh plugin --profile web add ./local-adb-quiet-0.1.1.tgz
 - **固定 3455**：对当前设备执行 `adb tcpip 3455`，等 adbd 在新端口应答，再重新 `adb connect`。**建议通道连通后先点它一次**，之后掉线恢复是毫秒级。
 - **扫描端口**：先跑明文握手；没有结果就自动转 TLS 路径——开放端口扫描 → TLS 握手判定 → 逐个 `adb connect` 验证。
 - **配对并连接**：给 Android 11+ 无线调试用。配对码一次性、面板每次打开都会换；配对记录存在 `~/.android/adb_known_hosts.pb`，**配对一次长期有效**。配对端口不知道填什么就**留空**。
+
+## 速度（实测，本机 proot / Redmi 26048RP6AC）
+
+| 场景 | 耗时 | 说明 |
+| --- | --- | --- |
+| 端口没变（缓存命中） | **7–11 ms** | `state.tlsPort` 存了上次的 TLS 端口，直接握手确认 |
+| 已有通道时问设备 | **~62 ms** | `adb shell getprop service.adb.tls.port`（无线调试开着时 adbd 会写这个属性） |
+| 明文候选（3455 / 5555 / 记忆端口） | **5 ms** | 发一个 `CNXN` 包 |
+| 冷扫无线调试端口（32768–60999） | **19.4 s** | 28k 端口、并发 300、4096 一块、凑够 3 个 TLS 候选就停 |
+| 经典 TCP 全端口扫描（65535） | 20–25 s | 只在完全没有线索时用 |
+
+调参是量出来的，不是拍的：
+
+- 并发冲高会**漏检**：c800 测三次里有两次只找到 2/3 的服务；c300 两次都 3/3。proot 用户态网络在高并发下会丢 SYN。
+- **TLS 握手不能塞进高并发扫描里**：同一时刻六百个连接在跑时，那个 TLS 端口会握手超时。所以改成「块内只做 TCP 探测、块与块之间安静地做 TLS 握手」，凑够候选就停。
+- TLS 判定失手也不至于连不上：扫不到 TLS 端口时，会把开放端口原样交给 `adb connect` 试（限 8 个）。
 
 ## 为什么是 3455，不是 5555
 
