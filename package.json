@@ -24,7 +24,8 @@
     "shizuku",
     "stellar",
     "wireless-debugging",
-    "tcpip"
+    "tcpip",
+    "plugin"
   ],
   "files": [
     "lib",
@@ -83,5 +84,9 @@
       "name": "usi112",
       "url": "https://github.com/usi112"
     }
-  ]
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  }
 }
