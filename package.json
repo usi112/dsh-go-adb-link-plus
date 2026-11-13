@@ -1,6 +1,6 @@
 {
   "name": "local-adb-quiet",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "为 DSH Go 手机版打造的 ADB 自动连接插件：自动发现手机 adbd 的 TCP 端口、adb tcpip 固定端口、Android 11+ 无线调试配对，并把通道交给 AI 直接使用 · Native dsh-go plugin that keeps ADB linked on the phone",
   "type": "module",
   "main": "lib/index.js",

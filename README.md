@@ -2,7 +2,7 @@
 
 **给 DSH Go 手机版装上一条不会掉线的 ADB 通道。**
 
-[![version](https://img.shields.io/badge/version-0.1.3-2ea44f)](package.json)
+[![version](https://img.shields.io/badge/version-0.1.4-2ea44f)](package.json)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![platform](https://img.shields.io/badge/platform-dsh--go%20%C2%B7%20Android-3D6FD6)](#安装)
 [![adb](https://img.shields.io/badge/adb-tcpip%203455%20%7C%20wireless%20pairing-555)](#它到底做了什么)
@@ -57,6 +57,59 @@ dsh plugin --profile web add ./local-adb-quiet-0.1.1.tgz
 装完 `设置 › 引擎 › 重启引擎` 一次（清单会自动重读，`lib/` 代码不会）。状态条出现在输入框上方。
 
 首次连接时手机会弹「允许 USB 调试吗」，点**允许**并勾**始终允许使用这台计算机**——只此一次。
+
+## 三种情况怎么用（第一次装 / 第一次配对 / 重启之后）
+
+### A. 第一次安装插件
+
+```text
+① 装：dsh plugin --profile web add <目录或 .tgz>
+② 重启：设置 › 引擎 › 重启引擎   ← lib/ 代码必须重启才加载
+③ 看：输入框上方出现状态条「ADB 未连接 · 点按」
+④ 点「连接」：插件找端口 → adb connect → 手机弹「允许 USB 调试吗」
+⑤ 在手机上勾「始终允许使用这台计算机」→ 允许   ← 只此一次
+⑥ 状态条变成「ADB · 3455」→ bash 里 adb devices 能看到设备，AI 的 adb 工具也能用了
+⑦ 立刻点一次「固定 3455」：以后掉线只需一次 connect，不用再扫 65535 个端口
+```
+
+前置：手机侧要有 TCP 调试入口 —— Stellar / Shizuku 的「TCP」开关，或已经 `adb tcpip` 过；
+Android 11+ 也可以只开「无线调试」走下面的第一次配对流程。
+
+### B. 第一次配对（Android 11+ 无线调试）
+
+```text
+① 手机：设置 › 开发者选项 › 无线调试（与 DSH 联同一个 Wi-Fi）
+② 手机：无线调试页 ›「使用配对码配对设备」→ 屏上会出现 IP、配对端口、6 位配对码
+③ 面板底部表单：地址填那个 IP；配对端口可留空；配对码填 6 位数字
+④ 点「配对并连接」
+⑤ 成功：提示「配对成功 · <端口>」，状态条变成「ADB · <端口>」
+⑥ 再点「固定 3455」（可选但推荐）
+```
+
+要点：
+
+- **配对码一次性**：面板每次打开都会换，填的时候别用旧的。
+- **配对记录长期有效**：存在 `~/.android/adb_known_hosts.pb`，之后端口变了只要重连，不用再要码。
+- **配对端口可以留空**：有任意 adb 通道时，插件直接读手机 `/proc/net/tcp*`（uid=2000 的 LISTEN 端口）0.2 秒拿到；
+  完全没有通道时会扫开放端口（约 20 秒），再用 `adb pair` 逐个试——配对码只对真正的配对端口有效，试错不会配错设备。
+- 无线调试关掉再开、或者重启手机，**端口会换**，但配对关系还在。
+
+### C. 手机重启之后
+
+事实：`adb tcpip 3455` 这个模式**重启就没了**（`persist.adb.tcp.port` 要 root，shell 改不动），
+无线调试的端口也会重新分配。恢复顺序：
+
+```text
+① 打开无线调试（如果之前就是靠它连的）
+② 面板点「扫描端口」，或直接「连接」
+     · 有 3455 还活着 → 5 ms 命中（重启后一般不通）
+     · 有旧配对记录 → TLS 通道能直接连，端口变了也一样（0.2 s ~ 20 s，取决于能不能读到设备监听表）
+③ 连上后点一次「固定 3455」，把端口重新钉死
+④ 验证：adb devices -l 出现 device；adb shell getprop service.adb.tcp.port 应为 3455
+```
+
+- 没有旧配对记录（换机、清过 `~/.android`）：先走 B 的配对流程。
+- 引擎启动时插件会自己试记忆端口；`--watch` 守护（可选）会周期性保活并重连。
 
 ## 面板怎么用
 
