@@ -27,6 +27,15 @@ Android 的 `adbd` 端口是随机的、重启会变；Android 11+ 原生「无�
 DSH Go 的 Ubuntu 是免 root 的 proot，没有 USB，也不能 `setprop persist.adb.tcp.port`。
 **结果是：想用 adb，就得每次都手动找端口。** 这个插件把那件事变成零。
 
+## 长什么样
+
+| 状态条 | 面板 | 无线调试配对 |
+| --- | --- | --- |
+| ![状态条](docs/img/status-bar.png) | ![面板](docs/img/panel.png) | ![配对](docs/img/pair.png) |
+
+> 以上是按插件真实视图 JSON 渲染的示意图（不是实机照片），布局、字段、按钮与 App 里一致；
+> 机器可读清单在 [`screenshots.json`](screenshots.json)。
+
 ## 它到底做了什么
 
 | 能力 | 做法 |
@@ -246,6 +255,8 @@ lib/state.js    运行记忆（$DSH_HOME/dsh-go/adb-link/state.json）
 cordis.patch.yml  注册进 profile 的 patch 层
 NOTICE.md        二改来源与逐项改动说明
 docs/使用流程.md  完整流程说明
+docs/img/*.png   状态条 / 面板 / 配对三张示意图
+screenshots.json 市场卡片用的图片清单
 ```
 
 ## 开发
