@@ -1,5 +1,7 @@
 # dsh-go-adb-link
 
+**二改自 [edgy7493/dsh-go-adb-link](https://github.com/edgy7493/dsh-go-adb-link)**（上游 1.2.4 · MIT）—— 逐项改动见 [NOTICE.md](NOTICE.md)。
+
 **给 DSH Go 手机版装上一条不会掉线的 ADB 通道。**
 
 [![version](https://img.shields.io/badge/version-0.1.4-2ea44f)](package.json)
@@ -37,6 +39,26 @@ DSH Go 的 Ubuntu 是免 root 的 proot，没有 USB，也不能 `setprop persis
 | **原生界面** | 输入框上方状态条（`ADB · 3455`）+ 面板：状态、方式、端口、端点、设备、已配对、客户端、自动重连、最近错误、检查时间 |
 | **交给 AI** | 注册一个 `adb` 工具（参数结构化、自动确保连接、原生结果卡），并在系统提示里明确「系统级操作优先用 adb，不必先问」 |
 | **不污染环境** | 运行记忆写在 `$DSH_HOME/dsh-go/adb-link/state.json`，不在包内，卸载/升级都不会带走或误发 |
+
+## 装完没生效？先查这两处
+
+`dsh plugin add` 正常会同时写 `dependencies` 和 `dsh.profile.bundles`，但**手动拷目录、或某些运行时版本**只写前者。
+两处缺一，引擎的组合配置里就看不到插件，重启多少次都没用：
+
+```sh
+dsh --profile web --dump-config | grep -A1 local-adb-quiet
+# 有 `- id: local-adb-quiet` 才算挂上；没输出就是没挂上
+```
+
+没挂上就补齐（路径换成你的）：
+
+```sh
+dsh plugin --profile web add "$DSH_HOME/dsh-go/plugins/local-adb-quiet"
+# 仍不写 bundles 时，手动加进 profiles/web/package.json 的 dsh.profile.bundles
+# 然后 设置 › 引擎 › 重启引擎
+```
+
+另一处常见原因：`lib/` 代码改了**必须重启引擎**（清单 `package.json` 会自动重读，代码不会）。
 
 ## 安装
 
