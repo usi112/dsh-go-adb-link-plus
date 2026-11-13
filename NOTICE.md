@@ -12,7 +12,7 @@
 | 原作者 | **edgy7493** |
 | 上游版本 | `1.2.4`（2026-11-06） |
 | 上游许可 | MIT |
-| 本仓库 | [usi112/dsh-go-adb-link-plus](https://github.com/usi112/dsh-go-adb-link-plus-plus)（二改） |
+| 本仓库 | [usi112/dsh-go-adb-link-plus](https://github.com/usi112/dsh-go-adb-link-plus)（二改） |
 | 许可 | MIT（沿用上游，原版权声明保留，见 [LICENSE](LICENSE)） |
 
 ## 二改了什么

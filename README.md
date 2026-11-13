@@ -44,7 +44,7 @@ DSH Go 的 Ubuntu 是免 root 的 proot，没有 USB，也不能 `setprop persis
 | **自动找端口** | 向候选端口发标准 ADB `CNXN` 握手包（纯 Node 实现，不需要 adb 客户端、不需要 root），只认回 `AUTH`/`CNXN` 的真 adbd；避开 TCP 自连与回显 |
 | **自动重连** | 引擎启动、面板打开、轮询发现掉线时自动连；90 秒防抖，端口漂移时后台全端口重扫（限频 10 分钟） |
 | **固定 3455** | 一键 `adb tcpip 3455`，让 adbd 改成明文 TCP 固定端口。之后掉线只剩一次 `adb connect 127.0.0.1:3455`，不用再扫 65535 个端口 |
-| **无线调试配对** | 面板里填「地址 / 配对端口 / 6 位配对码」→ `adb pair` 成功后自动在高位端口段找连接端口，逐个 `adb connect` 验证（TLS 端口只能这样认） |
+| **无线调试配对** | 面板里填「地址 / 配对端口 / 6 位配对码」→ `adb pair` 成功后，从设备监听表或开放端口扫描拿连接端口，逐个 `adb connect` 验证 |
 | **无线调试端口发现** | 有任意通道时直接读手机 `/proc/net/tcp*` 里 uid=2000（shell）的 LISTEN 端口——adbd 端口一览即得（**~180 ms**，配对面板开着时配对端口也在里面）；完全没通道才扫开放端口（~20 s），逐个 `adb connect` 验证 |
 | **原生界面** | 输入框上方状态条（`ADB · 3455`）+ 面板：状态、方式、端口、端点、设备、已配对、客户端、自动重连、最近错误、检查时间 |
 | **交给 AI** | 注册一个 `adb` 工具（参数结构化、自动确保连接、原生结果卡），并在系统提示里明确「系统级操作优先用 adb，不必先问」 |
@@ -84,7 +84,7 @@ dsh plugin --profile web add "$DSH_HOME/dsh-go/plugins/dsh-go-adb-link-plus"
 ```sh
 # 本地目录（开发用，改了代码热生效）
 mkdir -p "$DSH_HOME/dsh-go/plugins"
-git clone https://github.com/usi112/dsh-go-adb-link-plus-plus \
+git clone https://github.com/usi112/dsh-go-adb-link-plus \
   "$DSH_HOME/dsh-go/plugins/dsh-go-adb-link-plus"
 dsh plugin --profile web add "$DSH_HOME/dsh-go/plugins/dsh-go-adb-link-plus"
 
@@ -171,9 +171,9 @@ Android 11+ 也可以只开「无线调试」走下面的第一次配对流程�
 
 按钮分工：
 
-- **连接**：找端口 → `adb connect` → 等授权。找不到明文端口时会提示「无线调试是 TLS，用下面的配对表单」。
+- **连接**：找端口 → `adb connect` → 等授权。找不到明文端口时会提示「无线调试用 TLS-PSK，普通握手认不出，用下面的配对表单或扫描端口」。
 - **固定 3455**：对当前设备执行 `adb tcpip 3455`，等 adbd 在新端口应答，再重新 `adb connect`。**建议通道连通后先点它一次**，之后掉线恢复是毫秒级。
-- **扫描端口**：先跑明文握手；没有结果就自动转 TLS 路径——开放端口扫描 → TLS 握手判定 → 逐个 `adb connect` 验证。
+- **扫描端口**：先跑明文握手；没有结果就看设备监听表（有通道时约 0.2 秒），仍没有才扫开放端口，逐个 `adb connect` 验证。
 - **配对并连接**：给 Android 11+ 无线调试用。配对码一次性、面板每次打开都会换；配对记录存在 `~/.android/adb_known_hosts.pb`，**配对一次长期有效**。配对端口不知道填什么就**留空**。
 
 ## 速度（实测，本机 proot / Redmi 26048RP6AC / Android 16）
@@ -282,7 +282,7 @@ dsh plugin --profile web add "$PWD"
 
 - **原项目**：[edgy7493/dsh-go-adb-link](https://github.com/edgy7493/dsh-go-adb-link) · MIT · 作者 **edgy7493**。
   本仓库基于它的 `1.2.4`：端口发现、自动重连、状态条 + 面板骨架、`adb` 工具与提示段都来自上游。
-- **二改**：[usi112](https://github.com/usi112)：加了「固定 3455」、无线调试 TLS 配对、TLS 端口识别、
+- **二改**：[usi112](https://github.com/usi112)：加了「固定 3455」、无线调试配对（TLS-PSK 端口靠设备监听表定位）、
   面板字段扩展与断开逻辑修正，并把版本重编号为 `0.1.x`。
 - 逐项对比见 [NOTICE.md](NOTICE.md)。
 
